@@ -25,7 +25,7 @@ o	TopPeaksTable
 •	Code:
 o	Take sites where a variant (between orthologues) appears only in the variable position
 o	Report on the number of such sites:
-# sites for substitution analysis: 770
+"# sites for substitution analysis: 770"
 o	Loop over all positions and run: bsmut_innerloop_ver3
 •	Output:
 o	absSumPerPos

@@ -17,7 +17,7 @@ for i = 1:Npos
     end
     currData = currData(2:end); % first is INDEL, not relevant here
     currData(Freq(:, i) < minSites) = {nan};
-    deltaBinding(:, i, 1) = cellfun(@nanmedian, currData);
+    deltaBinding(:, i, 1) = cellfun(@nanmean, currData);
     deltaBinding(:, i, 2) = cellfun(@nanstd, currData);
 end
 colors = [rgb('Green'); rgb('Blue'); 0.9290    0.6940    0.1250; rgb('Red')];
@@ -28,11 +28,11 @@ for i = 1:4
     scatter(1:Npos, deltaBinding(i, :, 1), [], colors(i, :), 'filled');
 %     errorbar(1:Npos, d(i, :, 1), d(i, :, 2), '.', 'color', colors(i, :));
 end
-xlim([1, Npos]);
-ylim([-6 1]);
+set(gca, 'xlim', [1, Npos]);
+ylim([-8 2]);
 axis square; set(gcf, 'color', 'w');
 plot([motifLims; motifLims], ylim, '--k');
-ylabel({'Change in binding:',  'log2 (alternative / consensus)'});
+ylabel({'Change in binding:',  'log_2 (alternative / consensus)'});
 xlabel('Position');
 xlabels = horzcat(cellfun(@num2str, num2cell(-flankingBases:-1), 'uniformoutput', false), ...
     cellfun(@num2str, num2cell(1:flankingBases+motif_length), 'uniformoutput', false));

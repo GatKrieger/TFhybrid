@@ -1,14 +1,15 @@
 % fix the problem of gaps in the ends of the sequence!
-%% initiate: filter peaks to topPeakTable
+%% initiate: 
 Npeaks = size(peaks, 1);
 motifScoreTh = 0;
 % ifUniqueSite = 1;
 
 totalBasesAroundSite_forVis = 301;
 basesAroundSite_forVis = (totalBasesAroundSite_forVis-1)/2;
-smallDist = 15; % for analysis
+% smallDist = 15; % for analysis
+smallDist = motif_length;
 Wth = 0.25;
-minNsites = 40;
+minNsites = 20;
 
 L = size(signalAligned.cer, 1);
 motif_length = size(pfm, 2);
@@ -25,6 +26,7 @@ if exist('origConsSeq')
 end
 
 topPeaksTable = peaks;
+Npeaks = size(topPeaksTable, 1);
 %% align peaks by adjacent maximal motif score, plot aligned peaks 
 topPeaksTable = sortrows(topPeaksTable, 'locs');
 Ntop = length(topPeaksTable.locs);
@@ -96,7 +98,9 @@ Sites1 = locationInAlign;
 align_seq_by_PWM;
 
 topPeaksTable.seqDistMotif = motif_length - sum(alignLogical(:, smallDist+1 : smallDist + motif_length), 2);
-flankingCoor = [1:smallDist, smallDist+1+motif_length:size(alignLogical, 2)];
+% flankingCoor = [1:smallDist, smallDist+1+motif_length:size(alignLogical, 2)];
+flankingCoor = [smallDist - flankingBases + 1: smallDist, ...
+    smallDist + 1 + motif_length: smallDist + motif_length + flankingBases];
 topPeaksTable.seqDistFlank = length(flankingCoor) - sum(alignLogical(:, flankingCoor), 2);
 seqCer2(find(cellfun(@isempty, seqCer2))) = {''};
 seqPar2(find(cellfun(@isempty, seqPar2))) = {''};
@@ -104,6 +108,16 @@ topPeaksTable.gcCer = cell2mat(cellfun(@(x) length(regexp(x, 'G|C'))./length(x),
 topPeaksTable.gcPar = cell2mat(cellfun(@(x) length(regexp(x, 'G|C'))./length(x), seqPar2, 'uniformoutput', false));
 topPeaksTable.correctedLocs = correctedLocs;
 topPeaksTable.pfmMatchScorePerSp = pfmMatchScorePerSp;
+topPeaksTable.strand = Strand;
+
+placeInMat = smallDist+1 : smallDist+motif_length;
+placeInMat2 = placeInMat(1)- flankingBases :placeInMat(end)+ flankingBases;
+seqCer3 = cellfun(@(x) x(placeInMat2), seqCer2, 'uniformoutput', false);
+seqPar3 = cellfun(@(x) x(placeInMat2), seqPar2, 'uniformoutput', false);
+topPeaksTable.seq_cer = seqCer3;
+topPeaksTable.seq_par = seqPar3;
+topPeaksTable.alignLogical = alignLogical(:, placeInMat2);
+topPeaksTable_orig = topPeaksTable;
 %% mutation from consensus: for best motif score per species
 % mut_from_cons_best_motifScore_per_species;
 %% unique sites
@@ -111,18 +125,18 @@ if ifUniqueSite
     [~, uniqueSites] = unique(correctedLocs, 'stable');
     uniqueSites = intersect(uniqueSites, goodSites);
     alignSeq2n = alignSeq2n(uniqueSites);
+    topPeaksTable.row_num = [1:Npeaks]';
     topPeaksTable = topPeaksTable(uniqueSites, :);
     alignLogical = alignLogical(uniqueSites, :);
     pfmMatchScore = pfmMatchScore(uniqueSites);
     betterSeq = betterSeq(uniqueSites);
     disp(['# unique sites = ', num2str(length(uniqueSites))]);
+    if length(uniqueSites) < minNsites
+        error('no valid sequences');
+    else
+        disp(['# sites = ', num2str(Npeaks)]);
+    end
 end
-if length(uniqueSites) < minNsites
-    error('no valid sequences');
-else
-    disp(['# sites = ', num2str(Npeaks)]);
-end
-
 
 %% plot sequence alignment per site (sweater)
 if ifFigure
@@ -132,24 +146,23 @@ if ifFigure
     s3 = subplot(spRange(1), spRange(2), spLocs{3});
     imagesc(M);
     colormap(s3, colors);
-    set(gca, 'ytick', 1:3:Ntop*3, 'yticklabels', topPeaksTable.gene)
+%     set(gca, 'ytick', 1:3:Ntop*3, 'yticklabels', topPeaksTable.gene)
     subplot(spRange(1), spRange(2), spLocs{4});
     plot(nanmean(alignLogical), 'o-'); axis tight;
     hold on; plot([smallDist+1 smallDist+motif_length], [.8 .8], 'k');
-    ylim([0.65 1]);
+%     ylim([0.65 1]);
     set(gcf, 'color', 'w', 'position', [520    42   691   774]);
 end
 %% check
 % check_betterSeq;
 %% plot effect on binding
-placeInMat = smallDist+1 : smallDist+motif_length;
+
 % bs_mutations_plotEffectOnBinding
 
 %% sustitution matrix
-placeInMat2 = placeInMat(1)- flankingBases :placeInMat(end)+ flankingBases;
+
 currSeqLen = length(placeInMat2);
 consSeq2 = [repmat({''},1, flankingBases), num2cell(consSeq), repmat({''},1, flankingBases)];
-topPeaksTable.alignLogical = alignLogical(:, placeInMat2);
 topPeaksTable.NmutCore = length(placeInMat) - sum(alignLogical(:, placeInMat), 2);
 flnking = alignLogical(:, [placeInMat(1)- flankingBases : placeInMat(1)-1 , ...
     placeInMat(end)+1: placeInMat(end)+ flankingBases]);

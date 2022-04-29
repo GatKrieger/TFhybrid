@@ -2,9 +2,6 @@
 peaks_vs_motifScore_params;
 %% get the smoothed signal
 factors = fields(strainList);
-load PFMhyb;
-load pbsPwmHyb;
-alMotifScores = alMotifScoresS.(currTF);
 % factors = wantedSamples;
 strainList2 = struct2array(strainList);
 dataDir = [homeDir, 'checSeq_project/analyze/signal_on_aligned_seq/data_structs_swalign/'];
@@ -14,23 +11,22 @@ switch averageRepeats
             load([dataDir, 'signalAligned.mat']);
             load([dataDir, 'signalAlignedSm.mat']);
         end
-        currIdx = find(strcmp(factors, currSample));
-        currStrainList = strainList.(currSample);
+        currIdx = find(strcmp(factors, currTF));
+        currStrainList = strainList.(currTF);
         currIdx2 = find(ismember(samples, currStrainList));
-        currTF = currSample;
     case 0
         if size(signalAligned.cer, 2) ~= length(strainList2)
             load([dataDir, 'signalAligned_reps.mat']);
             load([dataDir, 'signalAlignedSm_reps.mat']);
         end
-        currIdx = find(strcmp(strainList2, currSample));
-        currIdx2 = find(ismember(samples, currSample));
+        currIdx = find(strcmp(strainList2, curr_chec_sample));
+        currIdx2 = find(ismember(samples, curr_chec_sample));
         fsl = fields(strainList);
         for i = 1:length(fsl)
-            if find(ismember(strainList.(fsl{i}), currSample))
+            if find(ismember(strainList.(fsl{i}), curr_chec_sample))
                 currTF = fsl{i};
                 disp(currTF);
-                disp(currSample);
+                disp(curr_chec_sample);
             end
         end        
 end
@@ -50,7 +46,12 @@ MinPeakHeight = [MinPeakHeightFixed MinPeakHeightFixed];
 figure;
 spRange = [3 4];
 spLocs = {1 2 [5, 6], [9 10], 3 4, 7, 8, 11, 12};
-suptitle([currTF, ': ', strrep(currSample, '_', ' ')]);
+switch averageRepeats
+    case 0
+        suptitle([currTF, ': ', strrep(curr_chec_sample, '_', ' ')]);
+    case 1
+        suptitle(currTF);
+end
 set(gcf, 'color', 'w', 'position', [143         -83        1625         821]);
 %% score motifs
 score_motif_by_kmers;
@@ -73,8 +74,6 @@ if ifScale
             end
             x = alSig_sop(:, 1);
             y = alSig_sop(:, 2);
-%             x = ds_sum_over_promoter.cer(:, currIdx2);
-%             y = ds_sum_over_promoter.par(:, currIdx2);
             x(x==0) = nan; y(y==0) = nan;
             if size(x, 2) > 1
                 x = nanmean(x, 2);
@@ -118,7 +117,12 @@ if ifScale
 end
 clear x y new_x
 %% # reads
-currNreads = NreadsTable(strcmp(NreadsTable.Row, currSample), :);
+if averageRepeats
+    samples2 = readtable([homeDir, 'checSeq_project/analyze/samples2.xlsx']);
+    curr_chec_sample = samples2.sample_name(contains(samples2.sample_pretty_name, currTF));
+    curr_chec_sample = curr_chec_sample{1};
+end
+currNreads = NreadsTable(strcmp(NreadsTable.Row, curr_chec_sample), :);
 currStr = {['cer: ', num2str(currNreads.cer_not_mito, '%10.1e'), ' reads'], ...
         ['par: ', num2str(currNreads.par_not_mito, '%10.1e'), ' reads']};
     dim = [0.0409 0.8973 0.0927 0.0457];
@@ -164,6 +168,7 @@ for j = 1:2
     currSp = sp{j};
     if strcmp(scoreBy, 'av')
         [bestMotifScores, bestMotifs] = maxk(KmerScore, nBest*2); 
+%         [bestMotifScores, bestMotifs] = maxk(unique(alPWMscore.(currSp)), nBest); 
     else
         [bestMotifScores, bestMotifs] = maxk(KmerScore(:, j), nBest*2);
     end

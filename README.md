@@ -4,7 +4,7 @@ This is a matlab code for the analysis of TF binding varaition between orthologo
 Experiment: ChEC-seq for 27 TFs in a yeast hybrid (*S. cerevisiae x S. paradoxus*)\
 Input: bedgraphs from GEO (accession number GSE196451)
 
-<img src="https://user-images.githubusercontent.com/60549750/166001882-a1ec46a7-fa4e-4051-b455-6a75b3267821.png" width="200" height="348">
+<img src="https://user-images.githubusercontent.com/60549750/166002522-85e555da-80bb-4bd4-b6f0-cdc0f3152e38.svg" width="200" height="348">
 
 The script 'runall.m' generates:
 1. Useful data structers

@@ -4,8 +4,6 @@ This is a matlab code for the analysis of TF binding varaition between orthologo
 Experiment: ChEC-seq for 27 TFs in a yeast hybrid (*S. cerevisiae x S. paradoxus*)\
 Input: bedgraphs from GEO (accession number GSE196451)
 
-![TFhybrid_scheme](https://user-images.githubusercontent.com/60549750/165992154-a56484d6-dce1-49df-9260-1c21566aa34f.jpg)
-
 The script 'runall.m' generates:
 1. Useful data structers
 2. Motif enrichment analysis
